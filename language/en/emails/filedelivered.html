@@ -1,0 +1,34 @@
+Subject: File delivered: {uploaded_num} files({uploaded_size} Bytes)
+Charset:
+HtmlEmail:text/plain
+
+Hello,
+
+Your {uploaded_num} files with {uploaded_size} Bytes was uploaded successfully.
+You can share the following links with more people:
+
+<!-- BEGIN links -->
+Filename:{links.filename} ({links.filesize} bytes)
+You can click on the following link to download:
+{links.downloadurl}
+
+Delete your file you can click on the following link:
+{links.deleteurl}
+
+<!-- IF links.file_descr -->
+The following message was included:
+-----------
+{links.file_descr}
+-----------
+<!-- ENDIF -->
+
+
+<!-- IF links.file_password -->
+you need the below password to acess to the file:
+-----------
+{links.file_password}
+-----------
+<!-- ENDIF -->
+
+
+<!-- END links -->

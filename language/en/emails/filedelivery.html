@@ -1,0 +1,26 @@
+Subject: File delivery: {uploaded_num} files({uploaded_size} Bytes)
+Charset:
+HtmlEmail:text/plain
+
+Hello,
+
+You've got {uploaded_num} file(s) with {uploaded_size} KB from {from_email} waiting for download.
+
+<!-- BEGIN links -->
+Filename:{links.filename} ({links.filesize})
+You can click on the following link to download:
+{links.downloadurl}
+<!-- IF links.file_descr -->
+The following message was included:
+---------
+{links.file_descr}
+---------
+<!-- ENDIF -->
+<!-- IF links.file_password -->
+you need the below password to acess to the file:
+---------
+{links.file_password}
+---------
+<!-- ENDIF -->
+
+<!-- END links -->

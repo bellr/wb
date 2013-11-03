@@ -1,0 +1,56 @@
+<div class="popup-menu_wrapper">
+    <div class="popup-menu_levelOne">
+        <div class="catalog-menu">
+            <ul class="level0ne-menu_mainItems">
+                {iterate}
+            </ul>
+            <hr class="sep-line">
+            <ul>
+                <li class="form-check"><div onclick="showHide('check_form');" class="tag-a">{L_output}</div>
+                    <form id="check_form" class="check-form" onSubmit="ajaxVs({url:'/widget/', act:'exchanger.show_demand.title_form',p:serialize(this),cache:'0'}); return false;">
+                        <i class="btn-close icon" title="Закрыть" onclick="hide('check_form')"></i>
+                        <div class="input">
+                            <div class="title">{L_number_demand}:</div> <input type="text" name="did" maxlength="10" style="width:160px" />
+                        </div>
+                        <div class="input">
+                            <div class="title">{L_enter_type}:</div>
+                            <select name="oper_type">
+                                <option value="exchange">{L_t_exchange}</option>
+                                <option value="oplata">{L_t_uslugi}</option>
+                                <option value="refill">{L_t_input}</option>
+                                <!--option value="output">{L_t_input}</option-->
+                                <option value="shop">{L_t_shop}</option>
+                            </select>
+                        </div>
+                        <div class="input btn">
+                            <button class="button_yellow">{L_show_demand}</button>
+                        </div>
+                    </form>
+                </li>
+                <li class="confirm">
+                    <div onclick="showHide('form_confirm');" class="tag-a">{L_confirm_demand}</div>
+                    <form id="form_confirm" class="form-confirm" onSubmit="ajaxVs({url:'/widget/', block:'process',act:'exchanger.show_demand',p:serialize(this)}); return false;">
+                        <input type="hidden" name="action" value="confirm_demand" />
+                        <i class="btn-close icon" title="Закрыть" onclick="hide('form_confirm')"></i>
+                        <div class="input">
+                            <div class="title">{L_number_demand}:</div> <input type="text" name="did" maxlength="10" style="width:160px" />
+                        </div>
+                        <div class="input">
+                            <div class="title">{L_enter_type}:</div>
+                            <select name="oper_type">
+                                <!--option value="exchange">{L_t_exchange}</option>
+                                <option value="uslugi">{L_t_uslugi}</option-->
+                                <option value="refill">{L_t_input}</option>
+                                <!--option value="in_out">{L_t_inout}</option-->
+                                <!--option value="shop">{L_t_shop}</option-->
+                            </select>
+                        </div>
+                        <div class="input btn">
+                            <button class="button_yellow">{L_check_demand}</button>
+                        </div>
+                    </form>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>

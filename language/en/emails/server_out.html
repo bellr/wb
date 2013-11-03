@@ -1,0 +1,22 @@
+Subject: ASAP! Server IS FULL!
+Charset:
+HtmlEmail:text/plain
+
+Hello,
+
+The current upload server {server_name} of your site {SITENAME} has not available servers to accept new files.
+So system have auto forced your site offline,which means that a offline status bar will appear instead of the upload form!
+Please setup a new server to accept new files,or run cronjob to delete files on the exists server to free more webspace!
+
+The stats of your upload servers:
+<!-- BEGIN servers -->
+Server {servers.server_id}:
+{servers.name}[{servers.domain}]
+
+Used Space/Max Space:{servers.webspace}/{servers.max_webspace}
+
+Warn level: {servers.warn_webspace}
+
+<!-- END servers -->
+
+{EMAIL_SIG}
