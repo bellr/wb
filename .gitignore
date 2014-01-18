@@ -1,7 +1,7 @@
 /.idea/
 /static/assets/
 /cache/
-/index.php
+/index.aspx
 
 # except do not ignore .gitignore
 !.gitignore
