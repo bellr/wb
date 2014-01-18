@@ -116,7 +116,7 @@ if(!empty($_SESSION['id']) && !$errortag) {
     <META content="index,follow,all" name="robots">
     <META name="author" content="AtomLy">
     <META NAME="COPYRIGHT" CONTENT="Copyright (c) by Wm-Rb.net">
-    <link rel="stylesheet" href="http://wm-rb.net/style.css" type="text/css">
+    <link rel="stylesheet" href="http://wm-rb.net/static/src/css/style.css" type="text/css">
     <link REL="shortcut icon" HREF="http://wm-rb.net/img/favicon.ico" TYPE="image/x-icon">
 
     <script language="JavaScript">
