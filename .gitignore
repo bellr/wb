@@ -2,6 +2,7 @@
 /static/assets/
 /cache/
 /index.aspx
+/out_rates_all.aspx
 
 # except do not ignore .gitignore
 !.gitignore
