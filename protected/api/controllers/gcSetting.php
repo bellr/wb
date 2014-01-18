@@ -1,0 +1,5 @@
+<?
+class gcSetting extends sSetting {
+
+
+}

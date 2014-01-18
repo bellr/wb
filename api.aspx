@@ -1,4 +1,5 @@
 <?
+exit;
 define('VS_DEBUG',true);
 $project = isset($_GET['object']) ? $_GET['object'] : $_POST['object'];
 define('PROJECT',strtoupper($project));

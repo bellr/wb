@@ -1,6 +1,9 @@
 <?
+
 define('PROJECT','HOME');
-define('VS_DEBUG',false);
-require_once(dirname($_SERVER['DOCUMENT_ROOT'])."/core/vs.php");
+define('PROJECT_ROOT',dirname(__FILE__));
+define('VS_DEBUG',true);
+
+require_once(dirname(PROJECT_ROOT)."/core/vs.php");
 
 Vitalis::Router();

@@ -1,22 +1,19 @@
 <?
-session_start();
-require("../include/header.aspx");
-require("../customsql.inc.aspx");
-//cheak_ref($_SERVER['HTTP_REFERER']);
 
-$db = new CustomSQL($DBName);
-$db_exchange = new CustomSQL_exchange($DBName_exchange);
+define('PROJECT','HOME');
+define('PROJECT_ROOT',dirname(dirname(__FILE__)));
+define('VS_DEBUG',true);
+
+require_once(dirname(PROJECT_ROOT)."/core/vs.php");
+
+session_start();
+require("include/header.aspx");
+
 $showtable = true;
 $errortag = false;
 $error_did = true;
-/*
-//форматирование данных
-if(!empty($_POST['login_index'])) {
-	$email = trim(stripslashes(htmlspecialchars($_POST['email'])));
-	$pass = trim(stripslashes(htmlspecialchars($_POST['passw'])));
-	$error_did = false;
-}
-*/
+
+if($_GET['action'] == 'logout') session_unset();
 
 if(!empty($_POST['login_index'])) {
     $email = trim(stripslashes(htmlspecialchars($_POST['email'])));
@@ -25,71 +22,76 @@ if(!empty($_POST['login_index'])) {
         header("location: http://wm-rb.net");
         exit;
     }
-    $ses_start = $db->sel_id_partner($email,md5($pass));
+
+    $ses_start = dataBase::DBmain()->select('partner','id, password, status',"where email='{$email}' and password='".md5($pass)."'");
+
     if (empty($ses_start)) {
+
         $errortag = true;
         $errormsg = "Неправильно введено имя или пароль";
-        $ses_status = $db->sel_status($email);
-        if($ses_status[0]['status'] == 0) $errormsg = "Ваш аккаунт заблокирован";
-    }
-    else {
+
+    } elseif($ses_status['status'] == '0') {
+
+        $errortag = true;
+        $errormsg = "Ваш аккаунт заблокирован";
+
+    } else {
         $showtable = false;
         $_SESSION['id'] = $ses_start[0]["id"];
         $_SESSION['pass'] = $pass;
         $_SESSION['email'] = $email;
     }
 }
+
 if(!empty($_SESSION['id']) && !$errortag) {
-    $ses_start = $db->sel_id_partner($_SESSION['email'],md5($_SESSION['pass']));
+
+    $ses_start = dataBase::DBmain()->select('partner','id, password, status',"where email='".$_SESSION['email']."' and password='".md5($_SESSION['pass'])."'");
+
     if (empty($ses_start)) {
 
         $errortag = true;
         $errormsg = "Неправильно введено имя или пароль.";
     }
-    else {$info_akk = $db->info_akk($_SESSION['id']);
+    else {
+
+        $info_akk = Model::Partner()->get(array(
+            'id' => $_SESSION['id']
+        ));
+
+        $PP = (array)Extension::Payments()->getParam('payments');
         $showtable = false;
-        $exch_balance = $db_exchange->exch_balance('WMZ');
-        $balance_in = $exch_balance[0]["balance"] - $exch_balance[0]["balance"]*0.008;
+
+        $exch_balance = Model::Balance()->get(array(
+            'name' => 'WMZ'
+        ));
+
+        $balance_in = $exch_balance["balance"] - $exch_balance["balance"] * $PP['com_WMT'] / 100;
 
         if(!empty($_POST['op_output'])) {
-            if($info_akk[0]['refer'] > 100 && $info_akk[0]['count_oper'] > 10) {
+            if($info_akk['refer'] > 100 && $info_akk['count_oper'] > 10) {
 
-                include("/home/wmrb/data/www/atm.wm-rb.net/nncron/xml/conf.php");
-                include("/home/wmrb/data/www/atm.wm-rb.net/nncron/xml/wmxiparser.php");
-                $db_exchange = new CustomSQL_exchange($DBName_exchange);
-                $db_admin = new CustomSQL_admin($DBName_admin);
-
-                if ($balance_in >= $_POST['summa'] && $_POST['summa'] >= 5 && $_POST['summa'] <= $info_akk[0]['balance']) {
+                if ($balance_in >= $_POST['summa'] && $_POST['summa'] >= 5 && $_POST['summa'] <= $info_akk['balance']) {
                     if(preg_match("/^[Z,z]{1}+[0-9]{12}+$/", $_POST['purse'])) {
-                        //Добавление номера платежа
-                        $reqID = wm_ReqID();
-                        $db_admin->add_id_pay($reqID,$_SERVER['REMOTE_ADDR'],$_SERVER['HTTP_X_FORWARDED_FOR']);
-                        $sel_idpay = $db_admin->sel_idpay($reqID);
-                        $purse_out = $db_exchange->sel_purse('WMZ');
 
-                        $parser = new WMXIParser();
-                        $response = $wmxi->X2(
-                            intval($sel_idpay[0]['id_pay']),    # номер перевода в системе учета отправителя; любое целое число без знака, должно быть уникальным
-                            $purse_out[0]['purse'],          # номер кошелька с которого выполняется перевод (отправитель)
-                            $_POST['purse'],         # номер кошелька, но который выполняется перевод (получатель)
-                            floatval($_POST['summa']),  # число с плавающей точкой без незначащих символов
-                            '0',    # целое от 0 до 255 символов; 0 - без протекции
-                            '',       # произвольная строка от 0 до 255 символов; пробелы в начале или конце не допускаются
-                            'Партнерские выплаты ID'.$_SESSION['id'],        # произвольная строка от 0 до 255 символов; пробелы в начале или конце не допускаются
-                            '0',    # целое число > 0; если 0 - перевод не по счету
-                            '0'    # если 0 – перевод будет выполняться без учета разрешает ли получатель перевод; 1 – перевод будет выполняться только если получатель разрешает перевод (в противном случае код возврата – 35)
-                        );
-                        $structure = $parser->Parse($response, DOC_ENCODING);
-                        $transformed = $parser->Reindex($structure, true);
-                        $kod_error = htmlspecialchars(@$transformed["w3s.response"]["retval"], ENT_QUOTES);
-                    }
-                    if ($kod_error == "0") {
-                        $bal_in = $balance_in - $_POST['summa'] * 1.008;
-                        $db_exchange->demand_update_bal($bal_in,'WMZ');
-                        $bal_part = $info_akk[0]['balance'] - $_POST['summa'];
-                        $db->update_partner($bal_part,$_SESSION['email']);
-                        header("Location: index.aspx");
-                        exit;
+                        $sel_idpay = Model::Id_payment()->add($did);
+
+                        $r = Extension::Payments()->Webmoney()->x2(array(
+                            'id_pay'        => $sel_idpay,
+                            'purse_in'      => $_POST['purse'],
+                            'purse_type'    => 'WMZ',
+                            'amount'        => floatval($_POST['summa']),
+                            'desc'          => 'Партнерские выплаты ID'.$_SESSION['id']
+                        ),'primary_wmid');
+
+                        if($r->retval == '0') {
+                            $bal_in = $_POST['summa'] * (1 + $PP['com_WMT'] / 100) ;
+
+                            Model::Balance()->updateBalance('WMZ','-'.$bal_in);
+                            Model::Partner()->updateBalance($_SESSION['id'],'-'.$_POST['summa']);
+
+                            header("Location: index.aspx");
+                            exit;
+                        }
                     }
                 }
             }
@@ -127,7 +129,7 @@ alert('Вы не ввели кошелек');
 document.output.purse.focus();
 return false;
 }
-if (parseFloat(document.output.summa.value) > {$info_akk[0]['balance']}) {
+if (parseFloat(document.output.summa.value) > {$info_akk['balance']}) {
 alert('Вы ввели сумму больше допустимой');
 document.output.summa.focus();
 return false;
@@ -142,7 +144,7 @@ alert('Z-кошелек указан не верно');
 document.output.purse.focus();
 return false;
 }
-if (parseFloat(document.output.summa.value) <= 5) {
+if (parseFloat(document.output.summa.value) < 5) {
 alert('Минимальная сумма вывода: 5$');
 document.output.summa.focus();
 return false;
@@ -211,69 +213,69 @@ else {
     echo "</div><br /><br />";
 } ?>
 <br />
-<div id="margin"><b>› Ваше учетное имя: </b><? echo $info_akk[0]['email']; ?></div>
-<div id="margin"><b>› Партнерский сайт: </b>http://<? echo $info_akk[0]['host']; ?></div>
-<div id="margin"><b>› Баланс: </b><? echo $info_akk[0]['balance']; ?>$</div><br />
+<div id="margin"><b>› Ваше учетное имя: </b><? echo $info_akk['email']; ?></div>
+<div id="margin"><b>› Партнерский сайт: </b>http://<? echo $info_akk['host']; ?></div>
+<div id="margin"><b>› Баланс: </b><? echo $info_akk['balance']; ?>$</div><br />
 <div align="center"><u>Вывод осуществляется только на Z-кошелек WebMoney<br /></u><br />Доступно для вывода <? printf("%6.2f ",$balance_in); ?> WMZ<br /><br />
-    <form  name="output" id="output" action="http://wm-rb.net/partner/index.aspx" method="POST" onSubmit="return Check_pay()">
+    <form  name="output" id="output" method="POST" onSubmit="return Check_pay()">
 	<span class="text">Z-кошелек :&nbsp;
 	<input type="text" size="13" maxlength="13" name="purse" />
 	<span class="text">&nbsp;Сумма<span class="text_log">(min 5$)</span> :&nbsp;</span>
-	<input type="text" size="15" maxlength="32" name="summa" value="<? echo $info_akk[0]['balance']; ?>" />&nbsp;
+	<input type="text" size="15" maxlength="32" name="summa" value="<? echo $info_akk['balance']; ?>" />&nbsp;
 	<input type="hidden" name="ses_id" value="<? echo session_id(); ?>" readonly="readonly">
-	<input type="submit" name="op_output" value="Перечислить" style="width:100px; "onmouseover="this.style.backgroundColor='#E8E8FF';" onmouseout="this.style.backgroundColor='#f3f7ff';" id="cursor" <? if($info_akk[0]['balance'] < 5) echo "disabled=\"disabled\""; ?> />&nbsp;
+	<input type="submit" name="op_output" value="Перечислить" style="width:100px; "onmouseover="this.style.backgroundColor='#E8E8FF';" onmouseout="this.style.backgroundColor='#f3f7ff';" id="cursor" <? if($info_akk['balance'] < 5) echo "disabled=\"disabled\""; ?> />&nbsp;
     </form>
 </div>
 <br />
 <b>&nbsp;СТАТИСТИКА</b>
 <hr color="#cococo"  size="1" /><br />
-<div id="margin"><b>› Количество переходов с сайта : </b><? echo $info_akk[0]['refer']; ?></div>
-<div id="margin"><b>› Количество завершенных операций : </b><? echo $info_akk[0]['count_oper']; ?></div>
-<div id="margin"><b>› Сумма поступивших средств через программу : </b><? echo $info_akk[0]['summ_oper']; ?>$</div><br />
-<div id="margin"><b>› Накопленные средства : </b><? echo $info_akk[0]['summa_bal']; ?>$</div>
+<div id="margin"><b>› Количество переходов с сайта : </b><? echo $info_akk['refer']; ?></div>
+<div id="margin"><b>› Количество завершенных операций : </b><? echo $info_akk['count_oper']; ?></div>
+<div id="margin"><b>› Сумма поступивших средств через программу : </b><? echo $info_akk['summ_oper']; ?>$</div><br />
+<div id="margin"><b>› Накопленные средства : </b><? echo $info_akk['summa_bal']; ?>$</div>
 <br />
 <b>&nbsp;РЕКЛАМНЫЕ МАТЕРИАЛЫ</b>
 <hr color="#cococo"  size="1" /><br />
-<div id="margin"><b>› Ваша партнерская ссылка : </b><a href="http://wm-rb.net/registration.aspx?partner_id=<? echo $info_akk[0]['id']; ?>">http://wm-rb.net/registration.aspx?partner_id=<? echo $info_akk[0]['id']; ?></a></div>
+<div id="margin"><b>› Ваша партнерская ссылка : </b><a href="http://wm-rb.net/registration.aspx?partner_id=<? echo $info_akk['id']; ?>">http://wm-rb.net/registration.aspx?partner_id=<? echo $info_akk['id']; ?></a></div>
 <div id="margin"><b>› Файл курсов для мониторингов : </b>http://wm-rb.net/out_rates_all.aspx</div>
 <br />
 <div><b>&nbsp;НАШИ БАННЕРЫ: </b></div><br />
 <div align="center">
-    <a href="http://wm-rb.net/registration.aspx?partner_id=<? echo $info_akk[0]['id']; ?>&dir=exchange"><img src="http://wm-rb.net/img/ban/10_10.gif" width="100" height="100" alt="Сервис электронных платежей" /></a>
+    <a href="http://wm-rb.net/registration.aspx?partner_id=<? echo $info_akk['id']; ?>&dir=exchange"><img src="http://wm-rb.net/img/ban/10_10.gif" width="100" height="100" alt="Сервис электронных платежей" /></a>
     <br /><br />
     <textarea rows="3" cols="100">
-        <a href="http://wm-rb.net/registration.aspx?partner_id=<? echo $info_akk[0]['id']; ?>&dir=exchange"><img src="http://wm-rb.net/img/ban/10_10.gif" width="100" height="100" alt="Сервис электронных платежей" /></a>
+        <a href="http://wm-rb.net/registration.aspx?partner_id=<? echo $info_akk['id']; ?>&dir=exchange"><img src="http://wm-rb.net/img/ban/10_10.gif" width="100" height="100" alt="Сервис электронных платежей" /></a>
     </textarea>
 </div>
 <hr />
 <div align="center">
-    <a href="http://wm-rb.net/registration.aspx?partner_id=<? echo $info_akk[0]['id']; ?>&dir=exchange"><img src="http://wm-rb.net/img/ban/46_6.gif" width="468" height="60" alt="Сервис электронных платежей" /></a>
+    <a href="http://wm-rb.net/registration.aspx?partner_id=<? echo $info_akk['id']; ?>&dir=exchange"><img src="http://wm-rb.net/img/ban/46_6.gif" width="468" height="60" alt="Сервис электронных платежей" /></a>
     <br /><br />
     <textarea rows="3" cols="100">
-        <a href="http://wm-rb.net/registration.aspx?partner_id=<? echo $info_akk[0]['id']; ?>&dir=exchange"><img src="http://wm-rb.net/img/ban/46_6.gif" width="468" height="60" alt="Сервис электронных платежей" /></a>
+        <a href="http://wm-rb.net/registration.aspx?partner_id=<? echo $info_akk['id']; ?>&dir=exchange"><img src="http://wm-rb.net/img/ban/46_6.gif" width="468" height="60" alt="Сервис электронных платежей" /></a>
     </textarea>
 </div>
 <hr />
 <div style="margin-top:10px;" align="center">
     <div align="center" style="float:right; margin-right:50px;">
-        <a href="http://wm-rb.net/registration.aspx?partner_id=<? echo $info_akk[0]['id']; ?>&dir=output_nal"><img src="http://wm-rb.net/img/ban/b_88_31.gif" width="88" height="31" alt="Ввод, вывод на банковские карты" /></a>
+        <a href="http://wm-rb.net/registration.aspx?partner_id=<? echo $info_akk['id']; ?>&dir=output_nal"><img src="http://wm-rb.net/img/ban/b_88_31.gif" width="88" height="31" alt="Ввод, вывод на банковские карты" /></a>
         <br /><br />
         <textarea rows="5" cols="50">
-            <a href="http://wm-rb.net/registration.aspx?partner_id=<? echo $info_akk[0]['id']; ?>&dir=output_nal"><img src="http://wm-rb.net/img/ban/b_88_31.gif" width="88" height="31" alt="Ввод, вывод на банковские карты" /></a>
+            <a href="http://wm-rb.net/registration.aspx?partner_id=<? echo $info_akk['id']; ?>&dir=output_nal"><img src="http://wm-rb.net/img/ban/b_88_31.gif" width="88" height="31" alt="Ввод, вывод на банковские карты" /></a>
         </textarea>
     </div>
     <div align="center">
-        <a href="http://wm-rb.net/registration.aspx?partner_id=<? echo $info_akk[0]['id']; ?>&dir=exchange"><img src="http://wm-rb.net/img/ban/b_88_31e.gif" width="88" height="31" alt="Обмен электронных валют" /></a>
+        <a href="http://wm-rb.net/registration.aspx?partner_id=<? echo $info_akk['id']; ?>&dir=exchange"><img src="http://wm-rb.net/img/ban/b_88_31e.gif" width="88" height="31" alt="Обмен электронных валют" /></a>
         <br /><br />
         <textarea rows="5" cols="50">
-            <a href="http://wm-rb.net/registration.aspx?partner_id=<? echo $info_akk[0]['id']; ?>&dir=exchange"><img src="http://wm-rb.net/img/ban/b_88_31e.gif" width="88" height="31" alt="Обмен электронных валют" /></a>
+            <a href="http://wm-rb.net/registration.aspx?partner_id=<? echo $info_akk['id']; ?>&dir=exchange"><img src="http://wm-rb.net/img/ban/b_88_31e.gif" width="88" height="31" alt="Обмен электронных валют" /></a>
         </textarea>
     </div>
 </div>
 <br /><br />
 <div><b>ФОРМЫ ДЛЯ ОПЛАТЫ: </b></div><br />
 <table align="center" cellpadding="5" cellspacing="4" border="0" width="175" style="background-color: #f3f7ff; BORDER-LEFT: #C0C0C0 1px solid; BORDER-RIGHT: #C0C0C0 1px solid; BORDER-TOP: #C0C0C0 1px solid;	BORDER-BOTTOM: #C0C0C0 1px solid;">
-    <form action="http://wm-rb.net/registration.aspx?partner_id=<? echo $info_akk[0]['id']; ?>&dir=output_nal" method=post target=_blank>
+    <form action="http://wm-rb.net/registration.aspx?partner_id=<? echo $info_akk['id']; ?>&dir=output_nal" method=post target=_blank>
         <tr>
             <td style="background-color: #ffffff; BORDER-LEFT: #C0C0C0 1px solid; BORDER-RIGHT: #C0C0C0 1px solid; BORDER-TOP: #C0C0C0 1px solid;	BORDER-BOTTOM: #C0C0C0 1px solid;"><a href="http://wm-rb.net"><img src="http://wm-rb.net/img/top_logo.gif" width="175" height="40" alt="Автоматический обмен электронных валют" /></a></td>
         </tr>
@@ -326,7 +328,7 @@ else {
 <div align="center">
     <textarea rows="10" cols="100">
         <table align="center" cellpadding="5" cellspacing="4" border="0" width="175" style="background-color: #f3f7ff; BORDER-LEFT: #C0C0C0 1px solid; BORDER-RIGHT: #C0C0C0 1px solid; BORDER-TOP: #C0C0C0 1px solid;	BORDER-BOTTOM: #C0C0C0 1px solid;">
-            <form action="http://wm-rb.net/registration.aspx?partner_id=<? echo $info_akk[0]['id']; ?>&dir=output_nal" method=post target=_blank>
+            <form action="http://wm-rb.net/registration.aspx?partner_id=<? echo $info_akk['id']; ?>&dir=output_nal" method=post target=_blank>
                 <tr>
                     <td style="background-color: #ffffff; BORDER-LEFT: #C0C0C0 1px solid; BORDER-RIGHT: #C0C0C0 1px solid; BORDER-TOP: #C0C0C0 1px solid;	BORDER-BOTTOM: #C0C0C0 1px solid;"><a href="http://wm-rb.net"><img src="http://wm-rb.net/img/top_logo.gif" width="175" height="40" alt="Автоматический обмен электронных валют" /></a></td>
                 </tr>
@@ -380,7 +382,7 @@ else {
 <br />
 <br />
 <table align="center" cellpadding="5" cellspacing="4" border="0" width="175" style="background-color: #f3f7ff; BORDER-LEFT: #C0C0C0 1px solid; BORDER-RIGHT: #C0C0C0 1px solid; BORDER-TOP: #C0C0C0 1px solid;	BORDER-BOTTOM: #C0C0C0 1px solid;">
-    <form action="http://wm-rb.net/registration.aspx?partner_id=<? echo $info_akk[0]['id']; ?>&dir=services_list" method=post target=_blank>
+    <form action="http://wm-rb.net/registration.aspx?partner_id=<? echo $info_akk['id']; ?>&dir=services_list" method=post target=_blank>
         <tr>
             <td style="background-color: #ffffff; BORDER-LEFT: #C0C0C0 1px solid; BORDER-RIGHT: #C0C0C0 1px solid; BORDER-TOP: #C0C0C0 1px solid;	BORDER-BOTTOM: #C0C0C0 1px solid;"><a href="http://wm-rb.net"><img src="http://wm-rb.net/img/top_logo.gif" width="175" height="40" alt="Пополнение баланса мобильных операторов, оплата коммунальных платежей интернет-провадеров" /></a></td>
         </tr>
@@ -447,7 +449,7 @@ else {
 <div align="center">
     <textarea rows="10" cols="100">
         <table align="center" cellpadding="5" cellspacing="4" border="0" width="175" style="background-color: #f3f7ff; BORDER-LEFT: #C0C0C0 1px solid; BORDER-RIGHT: #C0C0C0 1px solid; BORDER-TOP: #C0C0C0 1px solid;	BORDER-BOTTOM: #C0C0C0 1px solid;">
-            <form action="http://wm-rb.net/registration.aspx?partner_id=<? echo $info_akk[0]['id']; ?>&dir=services_list" method=post target=_blank>
+            <form action="http://wm-rb.net/registration.aspx?partner_id=<? echo $info_akk['id']; ?>&dir=services_list" method=post target=_blank>
                 <tr>
                     <td style="background-color: #ffffff; BORDER-LEFT: #C0C0C0 1px solid; BORDER-RIGHT: #C0C0C0 1px solid; BORDER-TOP: #C0C0C0 1px solid;	BORDER-BOTTOM: #C0C0C0 1px solid;"><a href="http://wm-rb.net"><img src="http://wm-rb.net/img/top_logo.gif" width="175" height="40" alt="Пополнение баланса мобильных операторов, оплата коммунальных платежей интернет-провадеров" /></a></td>
                 </tr>
