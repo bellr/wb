@@ -3,6 +3,9 @@ class gcBillPayment {
 
     public static function billWM($params) {
 
+        $params = (array)$params;
+        vsLog::add($params);
+        vsLog::add($_SERVER);
         sValidate::isIntWidth($params['wmid'],12,'L_bad_wmid');
         sValidate::isInt($params['pay_id']);
         sValidate::isIntWidth($params['did'],10,'L_bad_did');
