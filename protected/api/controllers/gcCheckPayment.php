@@ -11,6 +11,8 @@ class gcCheckPayment {
 
 	public static function resultCheckPayment($ar) {
 	
+	$ar = (array)$ar;
+
 	/* input params
 	ex_input - type curency
 	in_val - amount pay
@@ -30,10 +32,14 @@ class gcCheckPayment {
         Model::Balance()->updateBalance($ar['ex_input'],'-'.$amount_output);
 
 		$func = 'to'.$ar['purse_type'];
+		
 		return static::$func($ar);
 	}
     
 	public static function RepetPayment($ar) {
+	
+		$ar = (array)$ar;
+
 		$ar['purse_type'] = self::_checkTypePyrse($ar['ex_input']);
 		
 		$func = 'to'.$ar['purse_type'];
@@ -73,13 +79,13 @@ class gcCheckPayment {
 
 			$str_result = Extension::Payments()->EasyPay()->direct_translation($purse,$ar['purse_in'],trim(sprintf("%8.0f ",$ar['in_val'])),$ar['did']);
 ///////////////////
-vsLog::add($str_result);
+
 			if($str_result == 'ERROR_EXCESS_S') {
 				dataBase::DBexchange()->update('acount_easypay',array('output'=>$PP['easypay']['limits']['EP_mouth'],'st_output'=>0),'where acount='.$purse);
 				self::toEasyPay($ar);
 			} else {
 				$res = Extension::Payments()->EasyPay()->parseResEasypay($str_result);
-				dataBase::DBexchange()->update('demand',array('status'=>$res['status'],'coment'=>$res['message'],'purse_out'=>$ar['customerpurse'],'purse_payment'=>$purse),"where did=".$ar['did']);
+				dataBase::DBexchange()->update('demand',array('status'=>$res['status'],'coment'=>$res['message'],'purse_payment'=>$purse),"where did=".$ar['did']);
 	            
 				if($res['status'] == 'y') {
                     Model::Acount_easypay()->updateAcountRemoval($purse,$ar['in_val'],$amount_output);
@@ -92,6 +98,7 @@ vsLog::add($str_result);
 			dataBase::DBexchange()->update('demand',array('coment'=>Config::$sysMessage['L_empty_balance']),'where did='.$ar['did']);
             $status = false;
 		}
+		
         return $status;
 	}
 	

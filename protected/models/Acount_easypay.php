@@ -38,7 +38,7 @@ class Acount_easypay extends Model {
 		$purse = dataBase::DBexchange()->select('acount_easypay',
 			'acount',
 			'where status=1 and st_output=1 and balance>='.$amount.' and outputday+'.$amount.'<'.$PP->limits['EP_day'].' and output+'.$amount.'<'.$PP->limits['EP_mouth'],
-			'order by id ASC',
+			'order by balance asc',
 			'LIMIT 1');
 
 		return $purse = $purse[0]['acount'];

@@ -1,58 +1,132 @@
+var webStorage = {
+    isWork : function() {
+        try {
+            return 'localStorage' in window && window['localStorage'] !== null;
+        } catch (e) {
+            return false;
+        }
+    },
+    set: function(key,value) {
+        localStorage.setItem(key, value);
+    },
+    get: function(key) {
+        return localStorage.getItem(key);
+    },
+   /* update: function(data,key,key_value,value) {
+        var updateDate = JSON.parse(webStorage.get('tickets');
+//d(key);
+        data[key][key_value] = 1;
+        for(var item in data[key]) {
+            //d(item);
+            //d(data[key][item]);
+
+            //if(item == key) data[item] = value;
+           /// else
+        }
+d(data[key]);
+
+       // this.remove(key);
+        //return localStorage.getItem(key);
+    },*/
+    remove: function(key) {
+        localStorage.removeItem(key);
+    },
+    removeAll: function(key) {
+        localStorage.clear();
+    },
+    getKey: function(index) {
+        return localStorage.key(index);
+    }
+}
+
 function ajaxVs(parms) {
+
     var optReq = {
         url: parms.url || '/',
-        type: parms.type || "POST",
+        method: parms.method || "GET",
         timeout: parms.timeout || 5000,
-        //onComplete: parms.onComplete || function(){ajaxComplete(optReq);},
-        onError: parms.onError || function(){},
+        async: parms.async || true,
+        onComplete: parms.onComplete || function(){
+            if(optReq.sl == true) {hide('loadingblock');}
+        },
+        onSuccess: parms.onSuccess || function(){ajaxComplete(optReq)},
+        onError: parms.onError || function(){
+            hide('loadingblock');
+            showError('notify','Error: '+optReq.req.statusText);
+        },
         endComplete: parms.endComplete || true, //команда на вывод сообщения об успешном завершении операции или не очень успешном. Для того, что бы не выводить сообщение об успешном выполнении операции в параметрах указать endComplete:'false'
-        //onSuccess: parms.onSuccess || function(){alert('dasdasdadd');endComplete(optReq.req.responseText)},
         callback: parms.callback || false,//указываем на необходимость обработки данных после окончания запроса передается имя функции, которая будет вызвана после
         typeResponse: parms.typeResponse || "json",
         block: parms.block || "block", //метод обработки данных внутри блока, block - вывод данных в браузер, process - выводит данные в фомате json, но используется для обработки данных
         act: parms.act || "", //действие, имя операция или функции
-        p: parms.p || "", //передаваемые параметры
+        p: parms.p || '', //передаваемые параметры
         sl: parms.sl || true, //отображения процесса загрузки. поумолчанию load(показывать, что бы отключить необходимо в объекте передать параметр sl:"fon")
-        cache: parms.cache || 1, //кеширование созданного блока
-        extra: parms.extra //дополнительные параметр глобального использования в JS
+        cache: parms.cache || '0', //кеширование созданного блока
+        extra: parms.extra //дополнительные параметр глобального использования в JS extra:{'appendElement':'cont_stat'}
     };
 
-    var name_block = optReq.act.split('.')[1];
+    optReq.name_block = optReq.act.split('.')[1];
 
-        if(optReq.block == 'block' && document.getElementById(name_block) && optReq.cache == 1) {
-        show('disableBg');
-        show(name_block);
-        return false;
+    if(optReq.cache == 1) {
+
+        if(optReq.extra.object_id) {
+            optReq.name_block = optReq.extra.object_id;
+        }
+
+        console.log('load from cache '+optReq.name_block);
+
+        if(document.getElementById(optReq.name_block)) {
+            show(optReq.name_block);
+            return false;
+        }
+
+        /*  if(optReq.typeResponse != 'html') {
+            show('disableBg');
+        } else {
+            if(document.getElementById(name_block).innerHTML.length != 0) return false;
+        }*/
+
     }
+
     var req = loadXMLDoc();
 
     if(optReq.sl == true) {show('loadingblock');}
 
     if (req) {
-        req.open(optReq.type, location.protocol+'//'+location.host+optReq.url, true);
-		if(optReq.type == 'POST') {
-			req.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-			if (req.overrideMimeType ) req.setRequestHeader("Connection", "close");
+
+		if(optReq.method == 'GET') {
+            if(optReq.p) {
+                optReq.p = '&'+optReq.p
+            }
+            optReq.url = optReq.url+'?'+optReq.block+'='+optReq.act+optReq.p;
 		}
+
+        req.open(optReq.method, location.protocol+'//'+location.host+optReq.url, optReq.async);
+
+        if(optReq.method == 'POST') {
+            req.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+            if (req.overrideMimeType ) req.setRequestHeader("Connection", "close");
+        }
+
         req.onreadystatechange = function() {
             if (req.readyState == 4) {
                 if (req.status == 200) {
                     optReq.req = req;
-                    //optReq.onComplete();
-                    ajaxComplete(optReq);
+                    optReq.onSuccess();
+                    runScript(optReq.req.responseText);
                     req = null;
-                    if(optReq.sl == true) {hide('loadingblock');}
+
+                } else {
+
+                    optReq.onError();
                 }
-                else {hide('loadingblock');
-                    showError('notify','Error: '+req.statusText);
-                    //endComplete({status:1,message:'Error: sdsddsdsds'});
-                    //notify
-                    return false;}
+                optReq.onComplete();
             }
         };
         req.send(optReq.block+'='+optReq.act+'&'+optReq.p);
     } else {alert('no req'); return false;}
-	return false;
+
+	return true;
 }
 
 function loadXMLDoc() {
@@ -73,21 +147,26 @@ function loadXMLDoc() {
 }
 function ajaxComplete(parms) {
     action = parms.act.split('.')[1];
-    //var data = parms.req.responseText.split('|');
 
-    if(!document.getElementById(action) && parms.block == "block" || parms.cache == 0) {
+    if(!document.getElementById(parms.name_block) && parms.block == "block" || parms.cache == 1) {
+
         document.getElementById('disableBg').innerHTML = '';
-        var l = cElem({element:'div',id:action,classN:action+' disable-cont'},document.getElementById('disableBg'));
+        var l = cElem({element:'div',id:parms.name_block,classN:action+' disable-cont'},document.getElementById('disableBg'));
         l.innerHTML = parms.req.responseText;
         show('disableBg');
 
+    } else if(parms.typeResponse == 'html') {
+        //if(document.getElementById(action).innerHTML.length == 0) {
+            document.getElementById(parms.name_block).innerHTML = parms.req.responseText;
+       // }
     } else {
         if(parms.endComplete == true) endComplete(parms.req.responseText);
     }
+
     if(parms.callback) callbackVs(parms);
 }
 function callbackVs(parms) {
-    try {parms.resData = eval("(" + parms.req.responseText + ")");}
+    try {parms.resData = JSON.parse(parms.req.responseText);}
     catch (failed) {parms.resData = parms.req.responseText;}
     eval(parms.callback+"(parms)");
 }
@@ -112,23 +191,6 @@ function endComplete(successData) {
     setTimeout(function(){hide('notifyblock');}, waitTime);
 }
 
-function httpData(r,type) {
-    var ct = r.getResponseHeader("content-type");
-// Если не предоставлен тип по умолчанию, определение
-// не возвращена ли с сервера какая-либо форма XML
-    var data = !type && ct && ct.indexOf("xml") >= 0;
-// Получение объекта XML-документа, если сервер вернул XML,
-// если нет — возвращение полученного с сервера текстового
-// содержимого
-    data = type == "xml" || data ? r.responseXML : r.responseText;
-// Если указан тип "script", выполнение возвращенного текста,
-// реагируя на него, как на JavaScript
-    if (type=="script")
-        eval.call(window,data);
-// Возвращение данных, полученных в ответе (или XML-документа, или
-// текстовой строки)
-    return data;
-}
 function CreatElement(element,id,classN) {
     var el = document.createElement(element);
     if(id) {el.id = id;}
@@ -203,44 +265,18 @@ function deleteCookie(name, path, domain) {
     }
 }
 
-function pageX(elem) {
-    return elem.offsetParent ?
-        elem.offsetLeft + pageX( elem.offsetParent ) :
-        elem.offsetLeft;
-}
-function pageY(elem) {
-    return elem.offsetParent ?
-        elem.offsetTop + pageY( elem.offsetParent ) :
-        elem.offsetTop;
-}
-
-function parentX(elem) {
-    return elem.parentNode == elem.offsetParent ?
-        elem.offsetLeft :
-        pageX( elem ) -pageX( elem.parentNode );
-}
-function parentY(elem) {
-    return elem.parentNode == elem.offsetParent ?
-        elem.offsetTop :
-        pageY( elem ) -pageY( elem.parentNode );
-}
-
 function serialize(a) {
     var s = [];
-    if ( a.constructor == Array || typeof a == 'object') {
-        for ( var i = 0; i < a.length; i++ )
-            if(a[i].getAttribute('type')=="checkbox") {
-                if(a[i].checked){
-                    s.push(a[i].name + "=" + encodeURIComponent( a[i].value ) );
-                }
+    if (a.constructor==Array||typeof a=='object'){
+        for ( var i=0; i<a.length; i++ ){
+            if(a[i].getAttribute('type') == "checkbox" || a[i].getAttribute('type') == "radio") {
+                if(a[i].checked) s.push(a[i].name + "=" + encodeURIComponent( a[i].value ) );
             } else {
-                //if(a[i].value.length > 0) {
-                    s.push(a[i].name + "=" + encodeURIComponent( a[i].value ) );
-               // }
+                if(a[i].name != '') s.push(a[i].name + "=" + encodeURIComponent( a[i].value ) );
             }
+        }
     } else {
-        for ( var j in a )
-            s.push( j + "=" + encodeURIComponent( a[j] ) );
+        for (var j in a)s.push(j + "=" + encodeURIComponent(a[j]));
     }
     return s.join("&");
 }
@@ -256,14 +292,10 @@ function clearFomrValue(obj) {
 }
 
 function hide(id){if(typeof id != 'object') {id=document.getElementById(id);}id.style.display = 'none';}
+function closeWin(id){remove(id);hide('disableBg');}
 function show(id){if(typeof id != 'object') {id=document.getElementById(id);}id.style.display = 'block';}
-function showHide(id) {if(typeof id != 'object') {id=document.getElementById(id);}if(id.style.display=='' || id.style.display=='none'){show(id);}else{hide(id);}}
+function showHide(id) {if(typeof id != 'object') {id=document.getElementById(id);}console.log(id.style.display);if(id.style.display=='none'){show(id);}else{hide(id);}}
 function showError(id,message){show(id); document.getElementById(id).innerHTML = message;}
-
-/*function hidePopup(id) {
-    hide('disableBg');
-    remove(id);
-}*/
 function remove(id) {
     if(typeof id != 'object') {
         var e=document.getElementById(id);
@@ -358,7 +390,6 @@ initDOMParser = function() {
 }
 
 function runScript(html) {
-   // var string = '<!DOCTYPE html><html><head></head><body>'+html+'</body></html>';
     initDOMParser();
     var doc = new DOMParser().parseFromString(html, 'text/html');
     eval(text(doc.getElementsByTagName("script")));
@@ -386,61 +417,8 @@ function domReady(f) {
         domReady.timer = setInterval(isDOMReady, 13);
     }
 }
-
-//загрузка файла через ajax
-function file_send(idForm,data) {
-    sendForm(idForm, baseWeb+"/index.php?process="+idForm+"&"+data, callback);
-    return false;
-}
-function sendForm(form, url, callfunc) {
-    if (!document.createElement) return;
-    if (typeof(form)=="string") form=document.getElementById(form);
-    var frame=createIFrame();
-    var act = form.getAttribute('action');
-    frame.onSendComplete = function() {callfunc(form,act,getIFrameXML(frame));};
-    form.setAttribute('target', frame.id);
-    form.setAttribute('action', url);
-    form.submit();
-}
-
-function createIFrame() {
-    var id = 'f' + Math.floor(Math.random() * 99999);
-    var div = document.createElement('div');
-    div.innerHTML = "<iframe style=\"display:none\" src=\"about:blank\" id=\""+id+"\" name=\""+id+"\" onload=\"sendComplete('"+id+"')\"></iframe>";
-    document.body.appendChild(div);
-    return document.getElementById(id);
-}
-
-function sendComplete(id) {
-    var iframe=document.getElementById(id);
-    if (iframe.onSendComplete &&
-        typeof(iframe.onSendComplete) == 'function') iframe.onSendComplete();
-}
-
-function getIFrameXML(iframe) {
-    var doc=iframe.contentDocument;
-    if (!doc && iframe.contentWindow) doc=iframe.contentWindow.document;
-    if (!doc) doc=window.frames[iframe.id].document;
-    if (!doc) return null;
-    if (doc.location=="about:blank") return null;
-    if (doc.XMLDocument) doc=doc.XMLDocument;
-    return doc;
-}
-
-function callback(form,act,doc) {
-    form.setAttribute('action', act);
-    form.removeAttribute('target');
-
-    //var ar = doc.body.innerHTML.split('');
-//alert(doc.body.innerHTML);
-    endComplete(doc.body.innerHTML);
-
-
-
-    //if(ar[0] == 0) {operOk(ar[1],'lPrice');}
-    //if(ar[0] == 1) {operOk(ar[1],'lPrice');}
-    ///if(ar[0] == 2) {hide('lPrice');LoadWindowP('preLoadPrice','hidden',ar[2]);}
-    //if(ar[0] == 10) {operOkClose(ar[1],'openNote');}
-}
-//загрузка файла через ajax
-
+function d(data){console.log(data)};
+function BrowserGo(parms) {document.location.href = HOME_URL+parms.resData.href;}
+function appendTo(parms) {append(document.getElementById(parms.resData.appendElement),parms.resData.html);}
+function innerTo(parms) {document.getElementById(parms.resData.appendElement).innerHTML = parms.resData.html;}
+function innerToHtml(parms) {document.getElementById(parms.extra.appendElement).innerHTML = parms.req.responseText;}

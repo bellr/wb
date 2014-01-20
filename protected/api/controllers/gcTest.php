@@ -15,5 +15,20 @@ d($purse);
 
         d($str_result);
     }
+	
+	    public function getPurseOutput($P) {
+
+		        $PP = Extension::Payments()->getParam('payments','easypay');
+
+		$purse = dataBase::DBexchange()->select('acount_easypay',
+			'acount, balance',
+			'where status=1 and st_output=1 and balance >= '.$P->amount.' and outputday+'.$P->amount.'<'.$PP->limits['EP_day'].' and output+'.$P->amount.'<'.$PP->limits['EP_mouth'],
+			'order by balance asc');
+		d($purse);	
+		
+        $purse = Model::Acount_easypay()->getPurseOutput($P->amount);
+d($purse);
+    }
+
 
 }

@@ -56,7 +56,7 @@ class Demand extends Model {
                 break;
         }
 
-        Model::Id_payment()->add($did);
+        Model::Id_payment('HOME')->add($did);
     }
 
     public function createSignature($params,$method='md5') {
