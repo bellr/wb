@@ -103,7 +103,9 @@ class gcCheckPayment {
 	}
 	
 	public static function resultPayService($ar) {
-		//static $counter = 0;
+
+        $ar = (array)$ar;
+
 		$data_model = Model::Uslugi()->getStaticData('uslugi','form',$ar['name_uslugi']);
 
 		//if($ar['name_uslugi'] == 'BF' && preg_match("/1760[0-9]*/i",$ar['pole1']) || preg_match("/1705[0-9]*/i",$ar['pole1']) || preg_match("/1706[0-9]*/i",$ar['pole1']) || preg_match("/1704[0-9]*/i",$ar['pole1']) || preg_match("/1703[0-9]*/i",$ar['pole1']) || preg_match("/1701[0-9]*/i",$ar['pole1']) || preg_match("/1700[0-9]*/i",$ar['pole1'])) {$mass_oper[$ar['name_uslugi']] = '14521';}
@@ -115,35 +117,30 @@ class gcCheckPayment {
 			if (!empty($purse)) {
 				$str_result = Extension::Payments()->EasyPay()->pay_usluga($purse,$ar['pole2'].$ar['pole1'],trim(round($ar['in_val'])),$data_model['erip']);
 				$result = Extension::Payments()->EasyPay()->parseResEasypay($str_result);
-//echo $str_result;
-				if(Model::Acount_easypay()->checkAnswerEasypay($str_result,$purse)) {
-					if($result['status'] == 'y') {
-                        Model::Acount_easypay()->updateAcountService($purse,$ar['in_val']);
-						echo "Payment_successfully";
-					}
-				} else {
-			//	++$counter;
-			//	echo $counter;
-					self::resultPayService($ar);
-					
-				}
-/*
-				if($result != 'ERROR_BALANCE') {
-					if($result['status'] == 'y') {
-                        Model::EasyPay()->updateAcountService($purse,$ar['in_val']);
-						echo "Payment_successfully";
-					}
-				} else {
-					dataBase::DBexchange()->update('acount_easypay',array('code_error'=>$result,'status'=>0),'where acount='.$purse);
-					self::resultPayService($ar);
-					exit;
-				}
-*/
+
+                if($result['status'] == 'y') {
+
+                    Model::Acount_easypay()->updateAcountService($purse,$ar['in_val']);
+                    echo "Payment_successfully";
+
+                } else if($result['status'] == 'er') {
+
+                    Model::Acount_easypay()->resetDataAcount($purse);
+                    $result['status'] = 'yn';
+
+                }
+
 			} else {
-				//$result['status'] = 'er'; $result['message'] = Config::$sysMessage['L_UNDEFINED_PURSE'];
+
+                $result['status'] = 'er'; $result['message'] = Config::$sysMessage['L_UNDEFINED_PURSE'];
 				
 			}
-			dataBase::DBpaydesk()->update('demand_uslugi',array('status'=>$result['status'],'coment'=>$result['message'],'purse_payment'=>$purse),"where did=".$ar['did']);
+
+			dataBase::DBpaydesk()->update('demand_uslugi',array(
+                'status'        => $result['status'],
+                'coment'        => $result['message'],
+                'purse_payment' => $purse
+            ),"where did=".$ar['did']);
 		}
 	}
 

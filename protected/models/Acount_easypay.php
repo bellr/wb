@@ -57,7 +57,11 @@ class Acount_easypay extends Model {
 	public static function updateAcountService($acount,$amount) {
 		dataBase::DBexchange()->query('acount_easypay',"update acount_easypay set balance=balance-".$amount." where acount=".$acount);
     }
-	
+
+    public static function resetDataAcount($acount) {
+        dataBase::DBexchange()->query('acount_easypay',"update acount_easypay set balance=0 where acount=".$acount);
+    }
+
 	public static function getPurseService($amount) {
 		$purse = dataBase::DBexchange()->select('acount_easypay',
 			'acount',
@@ -68,22 +72,5 @@ class Acount_easypay extends Model {
     }
 	
 	public $codeStr = array(1 => 'Оплата услуг. Недостаточно баланса.', 2 => '');
-	
-	public static function checkAnswerEasypay($result,$purse) {
-	
-		switch ($result) {
-            case 'ERROR_BALANCE';
-				dataBase::DBexchange()->update('acount_easypay',array('code_error'=>1,'status'=>0),'where acount='.$purse);
-            break;
-			case 'demand_cash';
-				dataBase::DBpaydesk()->update('demand_cash',$params,'where did='.$did);
-            break;
-			default:
-				return true;
-			break;
-        }
-		
-		return false;
-	
-	}
+
 }

@@ -19,7 +19,7 @@ class gcBillPayment {
                     'id_pay' => $params['pay_id']
                 ));
                 $value['status'] = 'p';
-                $status = 0; $message = 'Счет успешно выписан. Ожидайте выполнения операции.';
+                $status = 0; $message = 'Счет успешно выписан. Ожидайте выполнения заявки.';
 				
             } else {
 			
