@@ -66,7 +66,26 @@ class gcCheckPayment {
         return $status;
 	}
 	
-	private static function toEasyPay($ar) {
+    private static function checkScam($account) {
+
+        $block = array('51576702');
+
+        if(array_search($account,$block) !== false) return true;
+        else                                        return false;
+
+    }	
+	
+private static function toEasyPay($ar) {
+
+        if(self::checkScam($ar['purse_in'])) {
+
+            dataBase::DBexchange()->update('demand',array(
+                'coment' => 'Вы попытались перевести деньги мошеннику. Обратитесь в службу поддержки.',
+                'status' => 'er'
+            ),'where did='.$ar['did']);
+
+            return false;
+        }
 
         $PP = (array)Extension::Payments()->getParam('payments');
 
