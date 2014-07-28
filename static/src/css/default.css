@@ -86,6 +86,8 @@ textarea:focus,input[type="text"]:focus,input[type="password"]:focus,select:focu
 .green{color:#008000}
 .red{color:#FF0000}
 .report {padding:5px;margin-left:40px;margin-right:40px;BORDER: #ff0000 1px solid;background-color: #FFFACD;}
+.instruction{padding:10px;BORDER: #ff0000 1px solid;background-color: #FFFACD;text-align:left;margin-bottom: 20px;}
+
 .body{position:relative;top:0px;left:0px;margin-bottom:20px}
 .boby-container{width:1005px;margin:0 auto}
 .body .body-left {float:left;width:215px}
@@ -223,7 +225,6 @@ background-color:#fff;
 #show_demand{width:600px;top:5%;}
 .show_demand .title-kabinet{font-size:17px;text-align:left}
 .show_demand b{font-weight:bold}
-.show_demand .instruction{padding:10px;BORDER: #ff0000 1px solid;background-color: #FFFACD;text-align:left;margin-bottom: 20px;}
 .show_demand .red.alert{margin-bottom:15px;margin-top:15px}
 .show_demand td{padding:10px}
 .show_demand .div_operok {FONT-SIZE: 11px;FONT-FAMILY: Tahoma;color: #333333;border: #C0C0C0 1px solid;padding: 5px;background-color: #FFFACD;vertical-align: middle;margin-left: 30px;margin-right: 30px;margin-bottom: 20px;}
