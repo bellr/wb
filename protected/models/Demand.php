@@ -1,7 +1,34 @@
 <?
 class Demand extends Model {
 
-    protected function getInfoModel($obj) {}
+    public function getInfo($SqlParam,$type) {
+
+        switch ($type) {
+
+            case 'demand':
+
+                $res = dataBase::DBexchange()->select($type,
+                    '*',
+                    dataBase::where($SqlParam));
+
+                break;
+            case 'demand_cash';
+                dataBase::DBpaydesk()->update('demand_cash',$params,array(
+                    'did' => $did
+                ));
+                break;
+            case 'oplata';
+            case 'paydesk';
+                dataBase::DBpaydesk()->update('demand_uslugi',$params,array(
+                    'did' => $did
+                ));
+                break;
+        }
+
+        return $res[0];
+    }
+
+    //protected function getInfoModel($obj) {}
 
 	public static function delete($did,$type) {
 	
