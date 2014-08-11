@@ -1,7 +1,7 @@
 /.idea/
 /static/assets/
 /cache/
-/index.aspx
+/header.php
 /out_rates_all.aspx
 
 # except do not ignore .gitignore
