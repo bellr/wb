@@ -113,7 +113,7 @@ function ajaxVs(parms) {
                 if (req.status == 200) {
                     optReq.req = req;
                     optReq.onSuccess();
-                    runScript(optReq.req.responseText);
+                    //runScript(optReq.req.responseText);
                     req = null;
 
                 } else {
