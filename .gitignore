@@ -1,8 +1,11 @@
 /.idea/
 /static/assets/
 /cache/
-/header.php
 /out_rates_all.aspx
 
 # except do not ignore .gitignore
 !.gitignore
+
+rate_wmrb_json.aspx
+rate_wmrb_txt.aspx
+header.php

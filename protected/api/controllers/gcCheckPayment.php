@@ -9,26 +9,25 @@ class gcCheckPayment {
         }
     }
 
+    /* input params
+    ex_input - type curency
+    in_val - amount pay
+    id_pay - ID payment
+    purse_in - purse for transfer
+    desc_pay - description payment
+    type_object  - params for detected
+    direct - derection exchange for select working WM purse
+    */
+
 	public static function resultCheckPayment($ar) {
 	
-	$ar = (array)$ar;
-
-	/* input params
-	ex_input - type curency
-	in_val - amount pay
-	id_pay - ID payment
-	purse_in - purse for transfer
-	desc_pay - description payment
-	type_object  - params for detected
-	direct - derection exchange for select working WM purse
-	*/
+	    $ar = (array)$ar;
         $PP = (array)Extension::Payments()->getParam('payments');
 
         $ar['purse_type'] = self::_checkTypePyrse($ar['ex_input']);
 		
 		$comission = $PP['com_'.$ar['purse_type']];
 		$amount_output = $ar['in_val'] + $ar['in_val'] * $comission / 100;
-		//dataBase::DBexchange()->query('balance',"update balance set balance=balance-{$amount_output} where name='".$ar['ex_input']."'");
         Model::Balance()->updateBalance($ar['ex_input'],'-'.$amount_output);
 
 		$func = 'to'.$ar['purse_type'];
@@ -48,7 +47,14 @@ class gcCheckPayment {
 	
 	private static function toWMT($ar) {
 
-		$r = Extension::Payments()->Webmoney()->x2(array('id_pay'=>$ar['id_pay'],'purse_in'=>$ar['purse_in'],'purse_type'=>$ar['ex_input'],'amount'=>floatval($ar['in_val']),'desc'=>$ar['desc_pay'],'direct'=>$ar['direct']));
+		$r = Extension::Payments()->Webmoney()->x2(array(
+            'id_pay'        => $ar['id_pay'],
+            'purse_in'      => $ar['purse_in'],
+            'purse_type'    => $ar['ex_input'],
+            'amount'        => floatval($ar['in_val']),
+            'desc'          => $ar['desc_pay'],
+            'direct'        => $ar['direct']
+        ));
 
 		if(isset($r->retval)) {
 			if($r->retval == 0) {

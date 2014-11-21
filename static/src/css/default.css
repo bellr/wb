@@ -202,10 +202,11 @@ background-color:#fff;
 .cont-data .title{font-weight:bold;text-align:center;}
 
 .balance-min{text-align:center;background-color: #fcfcfc;border: #C0C0C0 1px solid;padding:10px;-moz-box-shadow: 1px 3px 5px 0px rgba(141, 146, 151, 0.7);-webkit-box-shadow: 1px 3px 5px 0px rgba(141, 146, 151, 0.7);box-shadow: 1px 1px 4px 0px rgba(141, 146, 151, 0.7);}
-.balance-min .border-img{border: #C0C0C0 1px solid;}
 .balance-min p{font-weight:bold;font-size:13px;}
 .balance-min ul{padding-top:10px}
-.balance-min li{padding-bottom:5px}
+.balance-min li{padding:5px 0;border-bottom:1px solid #ccc}
+.balance-min li img{float:left}
+.balance-min li div{position:relative;top:10px}
 
 .disable-cont .close{float: right;}
 #support{width:600px;top:10%}
