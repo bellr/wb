@@ -102,12 +102,12 @@ class gcCheckPayment {
 
 		if(!empty($purse)) {
 
-            $str_result = Extension::Payments()->EasyPay()->getApi('Translate',[
+            $str_result = Extension::Payments()->EasyPay()->getApi('Translate',array(
                 'login' => $purse,
                 'purse_in' => $ar['purse_in'],
                 'in_val' => $ar['in_val'],
                 'did' => $ar['did'],
-            ]);
+            ));
 
 ///////////////////
 
@@ -188,10 +188,10 @@ class gcCheckPayment {
         if(!sValidate::$code) {
 
             $check_out_val = trim(number_format($demand['out_val'], 0, '.', ' '));
-            $str = Extension::Payments()->EasyPay()->getApi('getHistory',[
+            $str = Extension::Payments()->EasyPay()->getApi('getHistory',array(
                 'login' => $demand['purse_payment'],
                 'mode' => '4'
-            ]);
+            ));
 
             if(preg_match("/200 OK/i",$str)) {
                 $check_summe = Extension::Payments()->EasyPay()->parserHistorySum($check_out_val,$P->did,$str);
