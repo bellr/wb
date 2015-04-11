@@ -81,7 +81,7 @@ class gcCheckPayment {
 
     }	
 	
-private static function toEasyPay($ar) {
+    private static function toEasyPay($ar) {
 
         if(self::checkScam($ar['purse_in'])) {
 
@@ -102,7 +102,13 @@ private static function toEasyPay($ar) {
 
 		if(!empty($purse)) {
 
-			$str_result = Extension::Payments()->EasyPay()->direct_translation($purse,$ar['purse_in'],trim(sprintf("%8.0f ",$ar['in_val'])),$ar['did']);
+            $str_result = Extension::Payments()->EasyPay()->getApi('Translate',[
+                'login' => $purse,
+                'purse_in' => $ar['purse_in'],
+                'in_val' => $ar['in_val'],
+                'did' => $ar['did'],
+            ]);
+
 ///////////////////
 
 			if($str_result == 'ERROR_EXCESS_S') {
@@ -182,12 +188,16 @@ private static function toEasyPay($ar) {
         if(!sValidate::$code) {
 
             $check_out_val = trim(number_format($demand['out_val'], 0, '.', ' '));
-            $str = Extension::Payments()->EasyPay()->connect_history_easypay($demand['purse_payment'],'4');
+            $str = Extension::Payments()->EasyPay()->getApi('getHistory',[
+                'login' => $demand['purse_payment'],
+                'mode' => '4'
+            ]);
 
             if(preg_match("/200 OK/i",$str)) {
                 $check_summe = Extension::Payments()->EasyPay()->parserHistorySum($check_out_val,$P->did,$str);
 
                 if($check_summe == "AMOUNT_CORRESPONDS") {
+
                     dataBase::DBexchange()->query('balance',"update balance set balance=balance+".$demand['out_val']." where name='".$demand['ex_output']."'");
                     Model::Acount_easypay()->updateAcountRefill($demand['purse_payment'],$demand['out_val']);
                     dataBase::DBexchange()->update('demand',array('status'=>'yn'),'where did='.$P->did);
@@ -203,10 +213,18 @@ private static function toEasyPay($ar) {
                     } else {
                         $status = 1; $message = Config::$sysMessage['L_pay_error'];
                     }
+
+                } else {
+
+                    dataBase::DBexchange()->update('demand',array('status'=>'er'),'where did='.$P->did);
+                    $status = 1; $message = Config::$sysMessage['L_payment_not_executed'];
                 }
-                else {$status = 1; $message = Config::$sysMessage['L_payment_not_executed'];}
+
+            } else {
+
+                dataBase::DBexchange()->update('demand',array('status'=>'er'),'where did='.$P->did);
+                $status = 1; $message = Config::$sysMessage['L_connect_systempay'];
             }
-            else {$status = 1; $message = Config::$sysMessage['L_connect_systempay'];}
 
         } else {
             $status = 1; $message = sValidate::$message;

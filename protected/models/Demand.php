@@ -97,9 +97,26 @@ class Demand extends Model {
                 Extension::Payments()->getParam('payments')->signature_key;
 
         if($method == 'md5') {
+
             $str = md5($str);
+
+        } else if($method == 'sha256') {
+
+            $str = hash('sha256', $str);
         }
 
         return $str;
+    }
+
+    public function didHesh($did) {
+
+        return strtoupper(sCrypt::enCrypt($did));
+
+    }
+
+    public function didFromHesh($did) {
+
+        return sCrypt::deCrypt(strtolower($did));
+
     }
 }

@@ -89,7 +89,7 @@ if(!empty($_SESSION['id']) && !$errortag) {
                             Model::Balance()->updateBalance('WMZ','-'.$bal_in);
                             Model::Partner()->updateBalance($_SESSION['id'],'-'.$_POST['summa']);
 
-                            header("Location: index.aspx");
+                            header("Location: index.php");
                             exit;
                         }
                     }

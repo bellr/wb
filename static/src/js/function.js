@@ -59,7 +59,7 @@ function creatShowDemand(parms) {
         show('forData');
     }
 }
-function enterKabinet(parms) {var resJson = eval("(" + parms.req.responseText + ")");if(resJson.status == 0) {document.location.href = HOME_URL+'/partner/index.aspx';}}
+function enterKabinet(parms) {var resJson = eval("(" + parms.req.responseText + ")");if(resJson.status == 0) {document.location.href = HOME_URL+'/partner/index.php';}}
 function appendTo(parms) {append(document.getElementById(parms.resData.appendElement),parms.resData.html);}
 
 function enter_form() {

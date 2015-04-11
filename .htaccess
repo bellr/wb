@@ -1,7 +1,6 @@
 AddType application/x-httpd-php .aspx
 AddDefaultCharset utf-8
 Options -Indexes
-DirectoryIndex index.aspx
 
 <IfModule mod_expires.c>
 ExpiresActive On
@@ -70,11 +69,9 @@ RewriteRule (auto_exchange.aspx) http://%{HTTP_HOST}/ [R=301,L]
 RewriteRule (exchange.aspx) http://%{HTTP_HOST}/ [R=301,L]
 RewriteRule (rules.aspx) http://%{HTTP_HOST}/rules/ [R=301,L]
 
-RewriteEngine On
-RewriteBase /
 RewriteCond %{REQUEST_URI} (.*/[^/.]+)($|\?)
 RewriteRule   ^([^.\?]*[^/])$ %1/ [R,L,QSA]
-RewriteRule   ^(api)/?([a-zA-Z0-9\_\-]+)/?([a-zA-Z0-9\_\-]+)/?$  index.aspx?gController=$2&object=$3 [L]
-RewriteRule   ^(api)/?([a-zA-Z0-9\_\-]+)/?([a-zA-Z0-9\_\-]+)/?([a-zA-Z0-9\_\-]+)/?$  index.aspx?gController=$2&object=$3&object_id=$4 [L]
-RewriteRule   ^([a-zA-Z0-9\_\-]+)/?(([a-zA-Z0-9\_\-]+)/?)?$  index.aspx?controller=$1&object=$3 [L]
-RewriteRule   ^([a-zA-Z0-9\_\-]+)/?([a-zA-Z0-9\_\-]+)/?([a-zA-Z0-9\_\-]+)/?$  index.aspx?controller=$1&object=$2&object_id=$3 [L]
+RewriteRule   ^(api)/?([a-zA-Z0-9\_\-]+)/?([a-zA-Z0-9\_\-]+)/?$  index.php?gController=$2&object=$3 [L]
+RewriteRule   ^(api)/?([a-zA-Z0-9\_\-]+)/?([a-zA-Z0-9\_\-]+)/?([a-zA-Z0-9\_\-]+)/?$  index.php?gController=$2&object=$3&object_id=$4 [L]
+RewriteRule   ^([a-zA-Z0-9\_\-]+)/?(([a-zA-Z0-9\_\-]+)/?)?$  index.php?controller=$1&object=$3 [L]
+RewriteRule   ^([a-zA-Z0-9\_\-]+)/?([a-zA-Z0-9\_\-]+)/?([a-zA-Z0-9\_\-]+)/?$  index.php?controller=$1&object=$2&object_id=$3 [L]
