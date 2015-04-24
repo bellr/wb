@@ -1,4 +1,4 @@
-<?
+<?php
 class Id_payment extends Model {
 
     public function add($did=null) {

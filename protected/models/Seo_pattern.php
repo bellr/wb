@@ -1,4 +1,4 @@
-<?
+<?php
 class Seo_pattern extends Model {
 
     public $is_mCache = false;

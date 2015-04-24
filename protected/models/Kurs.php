@@ -1,4 +1,4 @@
-<?
+<?php
 class Kurs extends Model {
 
     public $prop;

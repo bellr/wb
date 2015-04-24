@@ -1,4 +1,4 @@
-<?
+<?php
 class Demand extends Model {
 
     public function getInfo($SqlParam,$type) {

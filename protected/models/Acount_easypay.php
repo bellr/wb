@@ -1,4 +1,4 @@
-<?
+<?php
 class Acount_easypay extends Model {
 
     public $prop;

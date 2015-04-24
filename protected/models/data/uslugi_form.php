@@ -1,4 +1,4 @@
-<?
+<?php
 return array(
 	'ByFly_Minsk_region' => array('erip' => 10161, 'account_name' => 'Номер договора', 'type_value' => 'int', 'maxlength' => 13),
     'ByFly_Gomel' => array('erip' => 10234, 'account_name' => 'Номер договора', 'type_value' => 'int', 'maxlength' => 13),

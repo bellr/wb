@@ -1,4 +1,4 @@
-<?
+<?php
 class Partner extends Model {
 
     public function get($SqlParam) {

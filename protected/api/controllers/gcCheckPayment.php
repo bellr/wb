@@ -180,6 +180,7 @@ class gcCheckPayment {
      * @return array
      */
 
+    // not used
     public static function checkPaymentEasypay($demand) {
 
         $P = inputData::init();

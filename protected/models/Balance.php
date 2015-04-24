@@ -1,4 +1,4 @@
-<?
+<?php
 class Balance extends Model {
 
     public function get($SqlParam) {

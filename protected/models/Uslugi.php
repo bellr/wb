@@ -1,4 +1,4 @@
-<?
+<?php
 class Uslugi extends Model {
 
     public $prop;
