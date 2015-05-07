@@ -23,7 +23,7 @@ if(!empty($_POST['login_index'])) {
         exit;
     }
 
-    $ses_start = dataBase::DBmain()->select('partner','id, password, status',"where email='{$email}' and password='".md5($pass)."'");
+    $ses_start = dataBase::DBmain()->select('partner','id, password, status',"where email='{$email}' and password='".sUser::createPassword(Model::Partner(),$pass)."'");
 
     if (empty($ses_start)) {
 
@@ -45,7 +45,7 @@ if(!empty($_POST['login_index'])) {
 
 if(!empty($_SESSION['id']) && !$errortag) {
 
-    $ses_start = dataBase::DBmain()->select('partner','id, password, status',"where email='".$_SESSION['email']."' and password='".md5($_SESSION['pass'])."'");
+    $ses_start = dataBase::DBmain()->select('partner','id, password, status',"where email='".$_SESSION['email']."' and password='".sUser::createPassword(Model::Partner(),$_SESSION['pass'])."'");
 
     if (empty($ses_start)) {
 
@@ -176,7 +176,7 @@ if ($errortag){
 }
 if($showtable) {
     ?>
-<form name="login" id="login" action="index.aspx"  method="POST" onSubmit="return Check_login()">
+<form name="login" id="login" action="index.php"  method="POST" onSubmit="return Check_login()">
     <div class="text">
         Для входа в защищенную зону Вы должны авторизироваться</div><br /><br />
 
